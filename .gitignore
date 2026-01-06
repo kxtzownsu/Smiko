@@ -1,0 +1,13 @@
+# Various build directories.
+build/
+
+# Test files for RMASmoke and tpm2-simulator.
+NVChip
+local_tpm_data
+test/tock-on-titan
+
+# Don't attempt to commit any CrOS images.
+/*.bin
+/*.img
+/*.iso
+/*.zip

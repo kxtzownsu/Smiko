@@ -1,0 +1,17 @@
+TI50_ro_prod = 0xc7d40497
+TI50_rw_prod = 0xfba25ca9
+TI50_ro_dev = 0x86d2b911
+TI50_rw_dev = 0xea9af1f9
+
+CR50_ro_dev = 0x3716ee6b, 0x3
+CR50_ro_prod = 0xaa66150f, 0x3
+
+CR50_rw_oldprod = 0xde88588d, presumed 0x3
+CR50_rw_prod = 0x87b73b67, 0x3
+CR50_rw_dev = 0x334f70DF, 0x3
+CR50_rw_olddev = 0xb93d6539, presumed 0x3
+CR50_rw_bige = 0x32a5fcf7, 0x10001
+CR50_rw_newbige = 0x6437597f, 0x10001
+
+
+note: all of these keys were made with public exponent 0x3, apart from those labeled with 0x10001

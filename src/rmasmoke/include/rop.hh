@@ -1,0 +1,1 @@
+int dump_memory_range(uint32_t addr, uint32_t len);

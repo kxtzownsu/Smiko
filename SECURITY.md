@@ -1,0 +1,8 @@
+# Scams
+Smiko and all software inside this repo are completely free of charge and is not to be distributed for or acquired with monetary value. If you have paid any amount of money for this software, you have been scammed and should demand your money back. 
+
+# Malware
+Smiko and all software inside this repo are designed with the intention of bypassing intentional security measures put in place by the Chromium and Android developers to prevent unauthorized access or control over specific regions of the device. By using this software and any exploits within, you are granting it full access to your device and the Google Security Chip (TM) present inside. The Google Security Chip (TM) has full hardware access to your Chromebook or Pixel device, and thus all software you run is being authorized to do whatever it is it desires. This may lead to unintented consequences should the payload executed not be as harmless as it originally appeared, and can result in your device being bricked, hacked, or worse. In the event this situation has occured, it is highly recommended you re-flash stock firmware to your GSC, if that is even still possible. You have been warned.
+
+# Warranty
+Smiko and all software inside this repo are designed to modify existing software on your device in ways unintended by its manufacturer. Doing so has a high possibility to void your device's warranty, and make it impossible to get repaired by an official manufacturer. If you desire to leave your warranty intact, it is recommended that you do not use this software unless you know what you're doing.

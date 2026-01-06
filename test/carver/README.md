@@ -1,0 +1,2 @@
+## Extracted
+This folder is full of RW and RO firmware payloads i've extracted from various cr50.bin.prod and ti50.bin.prod files using carver. Something to note about these payloads is that they've all been flattened when compiled for ChromeOS, effectively removing all instance of branching, debug symbols, functions, all in favor of a raw payload for the maximum possible compression.

@@ -1,0 +1,15 @@
+[submodule "src/cr50"]
+	path = src/cr50
+	url = https://github.com/HavenOverflow/Cr50.git
+# [submodule "src/ti50"]
+# 	path = src/ti50
+# 	url = https://github.com/HavenOverflow/Ti50.git
+# [submodule "src/nugget-os"]
+# 	path = src/nugget-os
+# 	url = https://github.com/HavenOverflow/nugget-os.git
+[submodule "test/gscemulator"]
+	path = test/gscemulator
+	url = https://github.com/HavenOverflow/gscemu.git
+[submodule "src/tpm2"]
+	path = src/tpm2
+	url = https://github.com/HavenOverflow/tpm2.git
