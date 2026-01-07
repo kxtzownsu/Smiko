@@ -1,0 +1,4 @@
+tpm_manager.LocalData.owner_password      max_size:32
+tpm_manager.LocalData.endorsement_password max_size:64
+tpm_manager.LocalData.lockout_password     max_size:64
+tpm_manager.LocalData.owner_dependency     max_count:5 max_size:40

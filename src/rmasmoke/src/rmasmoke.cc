@@ -30,11 +30,15 @@
 #include "args.hh"
 #include "chip_config.h"
 #include "nvmem.hh"
+#include "pb_encode.h"
+#include "pb_decode.h"
+#include "pb_common.h"
 #include "rmasmoke.hh"
 #include "rop.hh"
 #include "signed_header.h"
 #include "tpm_manager.pb.h"
 #include "tss_context.h"
+
 
 int tpm; // /dev/tpm0 file descriptor
 
@@ -161,36 +165,41 @@ uint32_t SendTPMCommand(tpm_result *buf, size_t len, tpm_result **respBuf,
 
 TSS2L_SYS_AUTH_COMMAND generate_auth_token(void)
 {
-	tpm_manager::LocalData ld;
-	std::string protobufData;
+    tpm_manager_LocalData ld = tpm_manager_LocalData_init_default;
+    std::string protobufData;
+    std::string local_data_path = (fbool("--local_data_path","-l")) ? fval("--local_data_path", "-l", 1) : "/var/lib/tpm_manager/local_tpm_data";
 
-	std::string local_data_path = (fbool("--local_data_path","-l")) ? fval("--local_data_path", "-l", 1) : "/var/lib/tpm_manager/local_tpm_data";
-
-	if (ReadFileToString(local_data_path, &protobufData) != 0) {
+    if (ReadFileToString(local_data_path, &protobufData) != 0) {
 		std::cerr << "Error: Failed to open local_tpm_data, try running the commands" << std::endl;
 		std::cerr << "  rmasmoke --clear_owner" << std::endl;
 		std::cerr << "	rmasmoke --take_ownership" << std::endl;
 		std::cerr << "to generate it." << std::endl;
 		exit(1);
 	}
-	ld.ParseFromString(protobufData);
-	char *owner_password = (char *)ld.owner_password().data();
-	size_t owner_password_len = ld.owner_password().size();
-	
-	TPMS_AUTH_COMMAND authcmd = {};
-	authcmd.hmac = {
-		.size = (UINT16)owner_password_len,
-		.buffer = {},
-	};
-	
-	memcpy(authcmd.hmac.buffer, owner_password, owner_password_len);
-	authcmd.nonce = {0, {}};
-	authcmd.sessionAttributes = TPMA_SESSION_CONTINUESESSION;
-	authcmd.sessionHandle = TPM2_RS_PW;
-	TSS2L_SYS_AUTH_COMMAND cmd = {1, {authcmd}};
 
-	return cmd;
+    // Nanopb decoding
+    pb_istream_t stream = pb_istream_from_buffer((uint8_t*)protobufData.data(), protobufData.size());
+    if (!pb_decode(&stream, tpm_manager_LocalData_fields, &ld)) {
+        std::cerr << "Error: Nanopb decoding failed: " << PB_GET_ERROR(&stream) << std::endl;
+        exit(1);
+    }
+
+    // Accessing bytes in Nanopb (assumes fixed size or nanopb-managed allocation)
+    char *owner_password = (char *)ld.owner_password.bytes;
+    size_t owner_password_len = ld.owner_password.size;
+    
+    TPMS_AUTH_COMMAND authcmd = {};
+    authcmd.hmac.size = (UINT16)owner_password_len;
+    memcpy(authcmd.hmac.buffer, owner_password, owner_password_len);
+    
+    authcmd.nonce = {0, {}};
+    authcmd.sessionAttributes = TPMA_SESSION_CONTINUESESSION;
+    authcmd.sessionHandle = TPM2_RS_PW;
+    TSS2L_SYS_AUTH_COMMAND cmd = {1, {authcmd}};
+
+    return cmd;
 }
+
 
 TSS2L_SYS_AUTH_COMMAND start_auth_session(void)
 {
@@ -224,38 +233,54 @@ inline constexpr const char* kInitialTpmOwnerDependencies[] = {
 
 int tpm_take_ownership(void)
 {
-	tpm_manager::LocalData ld;
-	std::string protobufData;
+    tpm_manager_LocalData ld = tpm_manager_LocalData_init_default;
+    std::string protobufData;
+    std::string local_data_path = (fbool("--local_data_path","-l")) ? fval("--local_data_path","-l", 1) : "/var/lib/tpm_manager/local_tpm_data";
 
-	std::string local_data_path = (fbool("--local_data_path","-l")) ? fval("--local_data_path","-l", 1) : "/var/lib/tpm_manager/local_tpm_data";
-
-	if (ReadFileToString(local_data_path, &protobufData) != 0)
-		std::cout << "Info: No existing local_tpm_data was found, generating new data at " << local_data_path << std::endl;
-	else
-		ld.ParseFromString(protobufData);
-
-	if (ld.owner_dependency_size() <= 0) {
-		ld.clear_owner_dependency();
-		for (auto dependency : kInitialTpmOwnerDependencies) {
-			ld.add_owner_dependency(dependency);
-		}
-		std::string owner_password = generate_rand(20);
-		std::string endorsement_password = generate_rand(40);
-		std::string lockout_password = generate_rand(40);
-		ld.set_owner_password(owner_password);
-		ld.set_endorsement_password(endorsement_password);
-		ld.set_lockout_password(lockout_password);
+    if (ReadFileToString(local_data_path, &protobufData) != 0) {
+		std::cerr << "Error: Failed to read local data at " << local_data_path << std::endl;
+		return 1;
 	}
 
-	ld.SerializeToString(&protobufData);
+    pb_istream_t istream = pb_istream_from_buffer((uint8_t*)protobufData.data(), protobufData.size());
+    pb_decode(&istream, tpm_manager_LocalData_fields, &ld);
+    
 
-	FILE *fp = fopen(local_data_path.c_str(), "w+");
-	fprintf(fp, protobufData.c_str());
-	fclose(fp);
+    if (ld.owner_dependency_count <= 0) {
+        ld.owner_dependency_count = 3;
+        strcpy(ld.owner_dependency[0], "TpmOwnerDependency_Nvram");
+        strcpy(ld.owner_dependency[1], "TpmOwnerDependency_Attestation");
+        strcpy(ld.owner_dependency[2], "TpmOwnerDependency_Bootlockbox");
 
-	nvmem_set_hierarchy(ld.owner_password(), ld.endorsement_password(), ld.lockout_password());
+        std::string op = generate_rand(20);
+        ld.owner_password.size = op.size();
+        memcpy(ld.owner_password.bytes, op.data(), op.size());
 
-	return 0;
+        std::string ep = generate_rand(40);
+        ld.endorsement_password.size = ep.size();
+        memcpy(ld.endorsement_password.bytes, ep.data(), ep.size());
+
+        std::string lp = generate_rand(40);
+        ld.lockout_password.size = lp.size();
+        memcpy(ld.lockout_password.bytes, lp.data(), lp.size());
+    }
+
+    uint8_t buffer[1024];
+    pb_ostream_t ostream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+    if (!pb_encode(&ostream, tpm_manager_LocalData_fields, &ld)) {
+        std::cerr << "Error: Nanopb encoding failed: " << PB_GET_ERROR(&ostream) << std::endl;
+        return 1;
+    }
+
+    FILE *fp = fopen(local_data_path.c_str(), "wb");
+    fwrite(buffer, 1, ostream.bytes_written, fp);
+    fclose(fp);
+
+    nvmem_set_hierarchy(std::string((char*)ld.owner_password.bytes, ld.owner_password.size),
+                        std::string((char*)ld.endorsement_password.bytes, ld.endorsement_password.size),
+                        std::string((char*)ld.lockout_password.bytes, ld.lockout_password.size));
+
+    return 0;
 }
 
 void show_info(int esc)
@@ -275,7 +300,6 @@ void show_info(int esc)
 		"-o, --take_ownership: Take ownership of the TPM and generate local_tpm_data\n"
 		"-p, --setup: Setup the necessary index for RMASmoke to operate\n"
 		"-l, --local_data_path [path]: Specify the path to the local_tpm_data to be used in authorization\n"
-		"-d, --dump_local_data: Dump various passwords and info from the provided local_tpm_data\n"
 		"-D, --dump_mem <addr> <length>: Dump any memory on the H1 to the CCD console\n"
 		"-C, --cleanup: Cleanup indexes created by RMASmoke\n"
 		"-v, --verbose: Show extra debug output\n"
@@ -321,27 +345,6 @@ int main(int argc, char **argv)
 			std::cerr << "Erorr: Failed to take TPM ownership." << std::endl;
 			return 1;
 		}
-	}
-
-	if (fbool("--dump_local_data","-d")) {
-		std::cout << "Info: Dumping local_tpm_data values." << std::endl;
-		tpm_manager::LocalData ld;
-		std::string protobufData;
-
-		std::string local_data_path = fval("--local_data_path","-l", 1);
-		if (!strcmp(local_data_path.c_str(), "")) local_data_path = "/var/lib/tpm_manager/local_tpm_data";
-
-		if (ReadFileToString(local_data_path, &protobufData) != 0) {
-			std::cerr << "Error: Failed to open local_tpm_data, try running the commands" << std::endl;
-			std::cerr << "  rmasmoke --clear_owner" << std::endl;
-			std::cerr << "  tpm_manager_client take_ownership" << std::endl;
-			std::cerr << "to generate it." << std::endl;
-			exit(1);
-		}
-		ld.ParseFromString(protobufData);
-		std::cout << "Owner Password: " << ld.owner_password() << std::endl;
-		std::cout << "Endorsement Password: " << ld.endorsement_password() << std::endl;
-		std::cout << "Lockout Password: " << ld.lockout_password() << std::endl;
 	}
 
 	if (fbool("--dump_mem","-D")) {

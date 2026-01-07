@@ -7,9 +7,9 @@ include toolchain.mk
 # Build variables
 BDIR ?= build
 # TODO (Hannah): Add NOSClient in release wave 2.
-PROGS ?= smiko shaft carver gsctool rmasmoke codesigner # nosclient
+PROGS ?= smiko shaft carver gsctool rmasmoke # nosclient
 FIRMWARE ?= smiko-cfw # cr50 ti50 nugget-os
-TESTS ?= tpm2-simulator
+TESTS ?= tpm2-simulator codesigner # Keep cr50-codesigner here until we have the static deps ~ Hannah
 CLEAN_DIRS := $(BDIR) src/smiko/build src/shaft/build \
 	src/carver/build src/rmasmoke/build src/cr50/build src/tpm2/build \
 	src/ti50/common/build src/ti50/third_party/tock/tock/target src/nugget-os/build \
@@ -27,7 +27,7 @@ endif
 
 
 # Shorthands
-all: utils firmware tests
+all: utils firmware
 utils: $(PROGS)
 firmware: $(FIRMWARE)
 tests: $(TESTS)
@@ -74,7 +74,6 @@ help:
 	@echo ""
 	@echo "Buildable Firmware:"
 	@echo "  cr50                 - Cr50 Stock GSC firmware"
-	@echo "  ti50                 - Ti50 Decompiled GSC firmware"
 	@echo ""
 	@echo "Environment Variables:"
 	@echo "  VERBOSE=1            - Show all commands executed when building"
@@ -139,7 +138,7 @@ src/cr50/build/smiko/RW/ec.RW.flat:
 	$(Q)BRANCH=TOT BOARD=smiko $(MAKE) -C src/cr50 --no-print-directory
 
 $(BDIR)/firmware/smiko-bootcon-cfw.bin: src/cr50/build/smiko/RW/ec.RW.flat
-	$(Q)bash util/packer.sh $@ \
+	$(Q)$(SHELL) util/packer.sh $@ \
 		src/cr50/prebuilts/node_locked_images/cr50.prod.test.ro.A.0.0.11.bin \
 		src/cr50/build/smiko/RW/ec.RW.flat \
 		test/carver/extracted/cr50-0-0-9.ro.b.flat \
@@ -148,30 +147,17 @@ $(BDIR)/firmware/smiko-bootcon-cfw.bin: src/cr50/build/smiko/RW/ec.RW.flat
 
 $(BDIR)/firmware/smiko-update-cfw.bin: src/cr50/build/smiko/RW/ec.RW.flat
 	$(Q)BRANCH=TOT BOARD=smiko $(MAKE) -C src/cr50 --no-print-directory
-	$(Q)bash util/packer.sh $@ \
+	$(Q)$(SHELL) util/packer.sh $@ \
 		test/carver/extracted/cr50-0-0-9.ro.a.flat \
 		src/cr50/build/smiko/RW/ec.RW.flat \
 		test/carver/extracted/cr50-0-0-9.ro.b.flat \
 		src/cr50/build/smiko/RW/ec.RW_B.flat \
 		>/dev/null 2>/dev/null
 
-
-
-
 cr50: $(BDIR) $(BDIR)/firmware/cr50.bin
 $(BDIR)/firmware/cr50.bin: $(BDIR)/bin/$(ARCH)/cr50-codesigner
 	$(Q)BRANCH=TOT BOARD=cr50 $(MAKE) -C src/cr50 --no-print-directory
 	$(Q)$(CP) src/cr50/build/cr50/ec.bin $@
-
-ti50: ti50-dt ti50-nt
-ti50-dt: $(BDIR) $(BDIR)/firmware/ti50-dt.bin
-$(BDIR)/firmware/ti50-dt.bin:
-	$(Q)PORT=dauntless $(MAKE) -C src/ti50 --no-print-directory
-	$(Q)$(CP) src/ti50/common/build/dauntless/dauntless/full_image.signed.bin $@
-ti50-nt: $(BDIR) $(BDIR)/firmware/ti50-nt.bin
-$(BDIR)/firmware/ti50-nt.bin:
-	$(Q)PORT=opentitan $(MAKE) -C src/ti50 --no-print-directory
-	$(Q)$(CP) src/ti50/common/build/opentitan/opentitan/full_image.signed.bin $@
 
 # Tests
 tpm2-simulator: $(BDIR) $(BDIR)/bin/$(ARCH)/tpm2-simulator

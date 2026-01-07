@@ -1,3 +1,6 @@
+# LibSTDC++
+LIBCPP  = -lstdc++
+
 # LibUSB
 LIBUSB  = $(shell $(PKG_CONFIG) libusb-1.0 --cflags)
 ifeq ($(STATIC),)
@@ -24,17 +27,10 @@ CPPFLAGS += -I$(REPO_ROOT)/lib/$(ARCH)/openssl/include
 endif
 
 # LibProtobuf
-LIBPROTOBUF  = $(shell $(PKG_CONFIG) protobuf --cflags)
-ifeq ($(STATIC),)
-LIBPROTOBUF += $(shell $(PKG_CONFIG) protobuf --libs)
-else
-ifneq ($(ARCH), x86_64)
-# Somehow this is larger than actual libprotobuf from x86, but libprotobuf is literally 50 something MB on AARCH64,
-# So instead we're just gonna stick to libprotobuf-lite for other architectures.
+LIBPROTOBUF  = $(shell $(PKG_CONFIG) protobuf-lite --cflags)
+LIBPROTOBUF += $(shell $(PKG_CONFIG) protobuf-lite --libs)
+ifneq ($(STATIC),)
 LIBPROTOBUF += $(REPO_ROOT)/lib/$(ARCH)/libprotobuf-lite.a
-else
-LIBPROTOBUF += $(REPO_ROOT)/lib/$(ARCH)/libprotobuf.a
-endif
 endif
 
 # LibTss2
@@ -55,4 +51,6 @@ endif
 # Static compilation handler
 ifneq ($(STATIC),)
 CFLAGS += -static
+CXXFLAGS += -static
+LDFLAGS += -static
 endif

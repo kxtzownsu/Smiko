@@ -66,4 +66,4 @@ More information on the [Code Of Conduct](CODE_OF_CONDUCT.md) and [Security](SEC
 
 [Join HavenOverflow](https://discord.gg/BtJ6j2eJrU)
 
-[Join Crosbreaker](https://discord.gg/crosbreaker-1375357349425971231)
+[Join Crosbreaker](https://discord.crosbreaker.dev)

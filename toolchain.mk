@@ -22,6 +22,7 @@ endif # ifeq CROSS_COMPILE,
 ### Standard build utilities ###
 MAKE ?= make
 SHELL := /bin/bash
+PYTHON ?= python3
 CC := $(CROSS_COMPILE)gcc
 CXX := $(CROSS_COMPILE)g++
 LD := $(CROSS_COMPILE)gcc
