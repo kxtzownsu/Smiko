@@ -1,3 +1,5 @@
+REPO_ROOT=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
 # LibSTDC++
 LIBCPP  = -lstdc++
 
