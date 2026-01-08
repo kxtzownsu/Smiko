@@ -11,3 +11,5 @@ test/tock-on-titan
 /*.img
 /*.iso
 /*.zip
+
+.requirements_met

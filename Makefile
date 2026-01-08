@@ -25,12 +25,21 @@ Q :=
 SUPPRESS := --verbose
 endif
 
-
 # Shorthands
 all: utils firmware
-utils: $(PROGS)
-firmware: $(FIRMWARE)
-tests: $(TESTS)
+utils: check-deps $(PROGS)
+firmware: check-deps $(FIRMWARE)
+tests: check-deps $(TESTS)
+
+.PHONY: check-deps
+check-deps:
+	@if [ ! -d src/cr50 ] || [ -z "$$(find src/cr50 -mindepth 1 -print -quit 2>/dev/null)" ]; then \
+		echo "Getting submodules" >&2; \
+		git submodule init; \
+		git submodule update; \
+	fi
+
+	$(Q)$(SHELL) ./requirements.sh
 
 .PHONY: clean
 clean:
