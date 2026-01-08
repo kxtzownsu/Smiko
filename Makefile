@@ -50,8 +50,12 @@ install:
 	@echo "  INSTALL build"
 	$(Q)$(INSTALL) -d /usr/local/bin/
 	$(Q)$(INSTALL) -m +x $(BINDIR)/* /usr/local/bin/
-	$(Q)$(INSTALL) -d /usr/local/lib
-	$(Q)$(INSTALL) -m -x build/lib/$(ARCH)/* /usr/local/lib/
+
+	@if ls build/lib/$(ARCH)/* >/dev/null 2>&1; then \
+		$(INSTALL:@%=install) -d /usr/local/lib; \
+		$(INSTALL:@%=install) -m -x build/lib/$(ARCH)/* /usr/local/lib/; \
+	fi
+
 	$(Q)$(INSTALL) -d /usr/share/smiko/firmware
 	$(Q)$(INSTALL) -m -x build/firmware/* /usr/share/smiko/firmware
 	$(Q)$(INSTALL) -d /usr/share/smiko/include
