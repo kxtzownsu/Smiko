@@ -1,3 +1,5 @@
+REPO_ROOT ?= ../..
+
 CROSS_COMPILE ?= 
 BINDIR ?= build/bin/$(ARCH)
 LIBDIR ?= build/lib

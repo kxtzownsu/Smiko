@@ -42,7 +42,7 @@ int serialport_init(const char* serialport, int baud)
 	toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
 	// Make raw
 	toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-	toptions.c_oflag &= ~OPOST;
+	toptions.c_oflag |= (OPOST | ONLCR);
 
 	toptions.c_cc[VMIN] = 0;
 	toptions.c_cc[VTIME] = 20;

@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "args.h"
 #include "common.h"
@@ -52,6 +53,7 @@ int fbool(char *arg)
 {
 	char buf[strlen(arg) + 3];
 	int i, argoff = -1;
+
 	/* Find our argument definition. */
 	for (i = 0; i < ARRAY_LEN(args); ++i) {
 		if (!strcmp(arg, args[i].arg)) {
@@ -83,11 +85,13 @@ int fbool(char *arg)
 char *fval(char *arg)
 {
 	int offset = fbool(arg);
-	if (!offset)
+	if (!offset || (gargc - offset) < 2)
 		return NULL;
-	
-	if (gargv[offset + 1][0] == '-')
-		return NULL;
+
+	if (gargv[offset + 1][0] == '-') {
+		fprintf(stderr, "Error: --%s expects an argument!\n", arg);
+		exit(1);
+	}
 	
 	return gargv[offset + 1];
 }

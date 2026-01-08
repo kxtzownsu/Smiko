@@ -23,6 +23,7 @@
 #include "args.h"
 #include "board_id.h"
 #include "chip_config.h"
+#include "compile_time_macros.h"
 #include "common.h"
 #include "console.h"
 #include "sysinfo.h"
@@ -50,6 +51,7 @@ int open_socket(void)
 		"/dev/citadel0",  // Nugget-OS
 		"/dev/swtpm0",    // tpm2-simulator
 	};
+	BUILD_ASSERT(ARRAY_LEN(devices) == XFER_METHOD_COUNT);
 
 	for (i = 0; i < ARRAY_LEN(devices); ++i) {
 		dev = open(devices[i], O_RDWR);

@@ -171,9 +171,15 @@ int get_sysinfo(struct first_response_pdu rpdu)
 int get_headerinfo(const char *path)
 {
 	uint32_t size, entry_point, offset = 0;
-	void *data = read_file(path, &size);
+	void *data;
 	struct SignedHeader *hdr;
 	struct SignedManifest *mf;
+
+	if (!path) {
+		fprintf(stderr, "Error: No file passed to %s!\n", __func__);
+		return -1;
+	}
+	data  = read_file(path, &size);
 
 	do {
 		hdr = (struct SignedHeader *)(data + offset);
@@ -265,9 +271,15 @@ static void print_hex32(uint32_t *data, size_t len, bool carray)
 int get_keyinfo(const char *path)
 {
 	uint32_t size, offset = 0;
-	void *data = read_file(path, &size);
+	void *data;
 	struct SignedHeader *hdr;
 	struct SignedManifest *mf;
+
+	if (!path) {
+		fprintf(stderr, "Error: No file passed to %s!\n", __func__);
+		return -1;
+	}
+	data = read_file(path, &size);
 	
 	do {
 		hdr = (struct SignedHeader *)(data + offset);

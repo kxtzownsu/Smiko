@@ -15,6 +15,8 @@ enum transfer_type {
     XFER_DT_SPI_DRIVER,
     XFER_CT_SPI_DRIVER,
     XFER_SUZYQ_USB,
+
+    XFER_METHOD_COUNT, // Not an actual transfer method
 };
 
 extern enum transfer_type xfer_type;
