@@ -172,7 +172,7 @@ uint32_t main_ropchain_0_5_120[] = {
 
     // == create our hex array struct ==
 
-    // *(uint32_t*)0x19000 = 0x0
+    // *(uint32_t*)0x19000 = val
     DATA_STRUCT_HEX_BUFFER_buffer___0_5_120, 0x0, ADDRESS_LEAK_START_MAGIC, 0x0, // r4, r5, r6, r7
     GADGET_SET_U32_VAL___0_5_120, // pc
 
